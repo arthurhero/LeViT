@@ -157,6 +157,8 @@ def get_args_parser():
 
     parser.add_argument('--output_dir', default='',
                         help='path where to save, empty for no saving')
+    parser.add_argument('--checkpoint_name', default='checkpoint.pth',
+                        help='filename of checkpoint')
     parser.add_argument('--device', default='cuda',
                         help='device to use for training / testing')
     parser.add_argument('--seed', default=0, type=int)
@@ -382,7 +384,7 @@ def main(args):
 
         lr_scheduler.step(epoch)
         if args.output_dir:
-            checkpoint_paths = [output_dir / 'checkpoint.pth']
+            checkpoint_paths = [output_dir / args.checkpoint_name]
             for checkpoint_path in checkpoint_paths:
                 utils.save_on_master({
                     'model': model_without_ddp.state_dict(),
