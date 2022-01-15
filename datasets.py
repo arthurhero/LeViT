@@ -89,8 +89,8 @@ def build_dataset(is_train, args):
     return dataset, nb_classes
 
 
-def build_transform(is_train, args):
-    resize_im = args.input_size > 32
+def build_transform_imagenet(is_train, args):
+    resize_im = args.input_size > 32 and args.data_set == 'IMNET' 
     if is_train:
         # this should always dispatch to transforms_imagenet_train
         transform = create_transform(
@@ -118,7 +118,42 @@ def build_transform(is_train, args):
             transforms.Resize(size, interpolation=3),
         )
         t.append(transforms.CenterCrop(args.input_size))
+    else:
+        t.append(transforms.Resize(args.input_size, interpolation=3))
 
     t.append(transforms.ToTensor())
     t.append(transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD))
     return transforms.Compose(t)
+
+def build_transform_cifar(is_train, args):
+    mean = np.asarray([0.4914, 0.4822, 0.4465])
+    std = np.asarray([0.2023, 0.1994, 0.2010])
+    img_size = args.input_size
+    normalize = transforms.Normalize(
+        mean=mean,
+        std=std
+    )
+    if is_train:
+        trans_train = transforms.Compose([
+            transforms.RandomCrop(img_size, padding=4),
+            transforms.RandomHorizontalFlip(0.5),
+            transforms.ToTensor(),
+            normalize
+        ])
+        return trans_train
+    else:
+        trans_test = transforms.Compose([
+            transforms.Resize(img_size),
+            transforms.ToTensor(),
+            normalize
+        ])
+        return trans_test
+
+
+def build_transform(is_train, args):
+    if args.data_set == 'IMNET':
+        return build_transform_imagenet(is_train, args)
+    else:
+        return build_transform_cifar(is_train, args)
+
+
