@@ -259,6 +259,7 @@ def main(args):
         distillation=(args.distillation_type != 'none'),
         pretrained=args.eval,
         fuse=args.eval,
+        resolution = args.input_size
     )
 
     if args.finetune:

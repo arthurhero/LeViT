@@ -34,38 +34,44 @@ __all__ = [specification.keys()]
 
 
 @register_model
-def LeViT_128S(num_classes=1000, distillation=True,
-               pretrained=False, fuse=False):
+def LeViT_128S_cifar(num_classes=10, distillation=False,
+               pretrained=False, fuse=False, resolution=32):
     return model_factory(**specification['LeViT_128S'], num_classes=num_classes,
-                         distillation=distillation, pretrained=pretrained, fuse=fuse)
+                         distillation=distillation, pretrained=pretrained, fuse=fuse, patch_size=2, patch_embed=b16_cifar, resolution=resolution)
+
+@register_model
+def LeViT_128S(num_classes=1000, distillation=True,
+               pretrained=False, fuse=False, resolution=224):
+    return model_factory(**specification['LeViT_128S'], num_classes=num_classes,
+                         distillation=distillation, pretrained=pretrained, fuse=fuse, resolution=resolution)
 
 
 @register_model
 def LeViT_128(num_classes=1000, distillation=True,
-              pretrained=False, fuse=False):
+              pretrained=False, fuse=False, resolution=224):
     return model_factory(**specification['LeViT_128'], num_classes=num_classes,
-                         distillation=distillation, pretrained=pretrained, fuse=fuse)
+                         distillation=distillation, pretrained=pretrained, fuse=fuse, resolution=resolution)
 
 
 @register_model
 def LeViT_192(num_classes=1000, distillation=True,
-              pretrained=False, fuse=False):
+              pretrained=False, fuse=False, resolution=224):
     return model_factory(**specification['LeViT_192'], num_classes=num_classes,
-                         distillation=distillation, pretrained=pretrained, fuse=fuse)
+                         distillation=distillation, pretrained=pretrained, fuse=fuse, resolution=resolution)
 
 
 @register_model
 def LeViT_256(num_classes=1000, distillation=True,
-              pretrained=False, fuse=False):
+              pretrained=False, fuse=False, resolution=224):
     return model_factory(**specification['LeViT_256'], num_classes=num_classes,
-                         distillation=distillation, pretrained=pretrained, fuse=fuse)
+                         distillation=distillation, pretrained=pretrained, fuse=fuse, resolution=resolution)
 
 
 @register_model
 def LeViT_384(num_classes=1000, distillation=True,
-              pretrained=False, fuse=False):
+              pretrained=False, fuse=False, resolution=224):
     return model_factory(**specification['LeViT_384'], num_classes=num_classes,
-                         distillation=distillation, pretrained=pretrained, fuse=fuse)
+                         distillation=distillation, pretrained=pretrained, fuse=fuse, resolution=resolution)
 
 
 FLOPS_COUNTER = 0
@@ -171,6 +177,11 @@ def b16(n, activation, resolution=224):
         activation(),
         Conv2d_BN(n // 2, n, 3, 2, 1, resolution=resolution // 8))
 
+def b16_cifar(n, activation, resolution=32):
+    return torch.nn.Sequential(
+            Conv2d_BN(3, n // 4, 3, 2, 1, resolution=resolution),
+            activation(),
+            Conv2d_BN(n // 4, n, 3, 1, 1, resolution=resolution // 2))
 
 class Residual(torch.nn.Module):
     def __init__(self, m, drop):
@@ -459,13 +470,14 @@ class LeViT(torch.nn.Module):
 
 
 def model_factory(C, D, X, N, drop_path, weights,
-                  num_classes, distillation, pretrained, fuse):
+                  num_classes, distillation, pretrained, fuse, patch_size=16, patch_embed=b16, resolution=224):
     embed_dim = [int(x) for x in C.split('_')]
     num_heads = [int(x) for x in N.split('_')]
     depth = [int(x) for x in X.split('_')]
     act = torch.nn.Hardswish
     model = LeViT(
-        patch_size=16,
+        img_size = resolution,
+        patch_size=patch_size,
         embed_dim=embed_dim,
         num_heads=num_heads,
         key_dim=[D] * 3,
@@ -479,7 +491,7 @@ def model_factory(C, D, X, N, drop_path, weights,
         ],
         attention_activation=act,
         mlp_activation=act,
-        hybrid_backbone=b16(embed_dim[0], activation=act),
+        hybrid_backbone=patch_embed(embed_dim[0], activation=act, resolution=resolution),
         num_classes=num_classes,
         drop_path=drop_path,
         distillation=distillation
