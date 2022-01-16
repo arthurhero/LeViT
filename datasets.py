@@ -146,7 +146,7 @@ def build_transform_cifar(is_train, args):
         test_img_size = 16
         padding = (img_size - test_img_size) // 2
         trans_test = transforms.Compose([
-            transforms.Resize(test_img_size),
+            transforms.Resize(test_img_size, interpolation=3),
             transforms.Pad(padding),
             transforms.ToTensor(),
             normalize

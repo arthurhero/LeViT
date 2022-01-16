@@ -259,8 +259,10 @@ def main(args):
         args.model,
         num_classes=args.nb_classes,
         distillation=(args.distillation_type != 'none'),
-        pretrained=args.eval,
-        fuse=args.eval,
+        #pretrained=args.eval,
+        pretrained=False,
+        #fuse=args.eval,
+        fuse=False,
         resolution = args.input_size
     )
 
