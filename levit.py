@@ -179,9 +179,9 @@ def b16(n, activation, resolution=224):
 
 def b16_cifar(n, activation, resolution=32):
     return torch.nn.Sequential(
-            Conv2d_BN(3, n // 4, 3, 1, 1, resolution=resolution),
+            Conv2d_BN(3, n // 4, 3, 2, 1, resolution=resolution),
             activation(),
-            Conv2d_BN(n // 4, n, 3, 2, 1, resolution=resolution))
+            Conv2d_BN(n // 4, n, 3, 1, 1, resolution=resolution))
 
 class Residual(torch.nn.Module):
     def __init__(self, m, drop):
